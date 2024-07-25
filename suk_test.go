@@ -1,34 +1,29 @@
-package suk2
+package suk
 
 import (
 	"sync"
 	"testing"
-	"time"
 )
 
-func TestSessionStorage(t *testing.T) {
-	t.Run("Session storage setting 1 key", func(t *testing.T) {
-		ss := NewSessionStorage()
-		got := ss.Set(10, -1*time.Second)
+func TestSyncMapStorage(t *testing.T) {
+	t.Run("Sync map storage setting 1 key", func(t *testing.T) {
+		ss, _ := NewSessionStorage()
+		got, _ := ss.Set(10)
 
-		if got.ID == "" {
+		if got == "" {
 			t.Error("got empty string for ID")
-		}
-
-		if time.Until(got.Expiration) > 0 {
-			t.Error("got positive expiration time for Expiration")
 		}
 	})
 
-	t.Run("Session storage setting 5 keys", func(t *testing.T) {
-		ss := NewSessionStorage()
+	t.Run("Sync map storage setting 5 keys", func(t *testing.T) {
+		ss, _ := NewSessionStorage()
 
 		for i := range 5 {
-			ss.Set(i, -1*time.Second)
+			ss.Set(i)
 		}
 
 		got := 0
-		ss.sessions.Range(func(key, value any) bool {
+		ss.storage.(*syncMap).Range(func(key, value any) bool {
 			got++
 			return true
 		})
@@ -40,15 +35,15 @@ func TestSessionStorage(t *testing.T) {
 		}
 	})
 
-	t.Run("Session storage setting and getting 1 key", func(t *testing.T) {
-		ss := NewSessionStorage()
-		gotSet := ss.Set(10, -1*time.Second)
+	t.Run("Sync map storage setting and getting 1 key", func(t *testing.T) {
+		ss, _ := NewSessionStorage()
+		gotSet, _ := ss.Set(10)
 
-		if gotSet.ID == "" {
+		if gotSet == "" {
 			t.Error("got empty string for ID")
 		}
 
-		gotGet, err := ss.Get(gotSet.ID)
+		gotGet, err := ss.Get(gotSet)
 
 		if err != nil {
 			t.Errorf("got error %s", err.Error())
@@ -59,7 +54,7 @@ func TestSessionStorage(t *testing.T) {
 		}
 
 		got := 0
-		ss.sessions.Range(func(key, value any) bool {
+		ss.storage.(*syncMap).Range(func(key, value any) bool {
 			got++
 			return true
 		})
@@ -71,8 +66,8 @@ func TestSessionStorage(t *testing.T) {
 		}
 	})
 
-	t.Run("Session storage with 10 concurrent sets", func(t *testing.T) {
-		ss := NewSessionStorage()
+	t.Run("Sync map storage with 10 concurrent sets", func(t *testing.T) {
+		ss, _ := NewSessionStorage()
 
 		wg := new(sync.WaitGroup)
 
@@ -80,14 +75,14 @@ func TestSessionStorage(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				ss.Set(i, -1*time.Second)
+				ss.Set(i)
 			}()
 		}
 
 		wg.Wait()
 
 		got := 0
-		ss.sessions.Range(func(key, value any) bool {
+		ss.storage.(*syncMap).Range(func(key, value any) bool {
 			got++
 			return true
 		})
@@ -99,8 +94,8 @@ func TestSessionStorage(t *testing.T) {
 		}
 	})
 
-	t.Run("Session storage with 1.000 concurrent sets", func(t *testing.T) {
-		ss := NewSessionStorage()
+	t.Run("Sync map storage with 1.000 concurrent sets", func(t *testing.T) {
+		ss, _ := NewSessionStorage()
 
 		wg := new(sync.WaitGroup)
 
@@ -108,14 +103,14 @@ func TestSessionStorage(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				ss.Set(i, -1*time.Second)
+				ss.Set(i)
 			}()
 		}
 
 		wg.Wait()
 
 		got := 0
-		ss.sessions.Range(func(key, value any) bool {
+		ss.storage.(*syncMap).Range(func(key, value any) bool {
 			got++
 			return true
 		})
