@@ -1,10 +1,11 @@
-# SUCKS - Single Use Cookies (Killer Security)
+# SUK - Single-use Keys
 
-What if instead of storing user info on the server side, in a JWT token, a token with a randomized session ID (with pretty good entropy) was used, expiring as soon as it was needed.
+What if, instead of storing user information on the client side in a JWT token, you used a token with a randomized session ID that has high entropy? This token would only be valid for a short duration and expire immediately after use, enhancing security and minimizing the risk of unauthorized access.
 
 ```mermaid
 flowchart LR
     Q1(Is the user cookie valid?)
+    Q2(Need authentication?)
     P1(Generate new one/Invalidate old one)
     C1(Continue execution normally)
     C2(Authentication error)
@@ -12,6 +13,7 @@ flowchart LR
     Q1-->|No|C2
     Q1-->|Yes|P1
     P1-->C1
+    C1-->|Yes|Q1
 ```
 
 ## Decisions
