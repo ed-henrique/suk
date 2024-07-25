@@ -13,7 +13,8 @@ flowchart LR
     Q1-->|No|C2
     Q1-->|Yes|P1
     P1-->C1
-    C1-->|Yes|Q1
+    C1-->|Yes|Q2
+    Q2-->Q1
 ```
 
 ## Decisions
@@ -23,5 +24,5 @@ flowchart LR
 
 ## Roadmap
 
-- [ ] Make implementation concurrent-safe
+- [x] Make implementation concurrent-safe
 - [ ] Use better algorithm for random and strong keys (refer to [this](https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go))
