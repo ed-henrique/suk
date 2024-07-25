@@ -43,7 +43,7 @@ func TestSyncMapStorage(t *testing.T) {
 			t.Error("got empty string for ID")
 		}
 
-		gotGet, err := ss.Get(gotSet)
+		gotGet, _, err := ss.Get(gotSet)
 
 		if err != nil {
 			t.Errorf("got error %s", err.Error())
