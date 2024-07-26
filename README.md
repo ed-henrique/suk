@@ -22,15 +22,49 @@ Need authentication? ───────────────────�
     └── Well, ok then.
 ```
 
+
+## Getting Started
+
+### Getting SUK
+
+```bash
+go get -u github.com/ed-henrique/suk
+```
+
+### Running SUK
+
+```go
+package main
+
+import (
+    "github.com/ed-henrique/suk"
+)
+
+func main() {
+    resource := "important stuff here!"
+
+    ss, _ := suk.NewSessionStorage(suk.WithAutoClearExpiredKeys())
+
+    // Sets resource to a randomly generated key
+    key, _ := ss.Set(resource)
+
+    // Gets the resource, invalidating the previous key
+    resource, newKey, _ := ss.Get(key)
+
+    // Removes both the key and the resource
+    ss.Remove(newKey)
+}
+```
+
+### Examples
+
+- [Sample Server with Cookie Authentication](./examples/cookies/main.go)
+
 ## Decisions
 
 - Multiple cookies can connect to a single session, but they are not aware of
 each other
 - If all cookies to a session are used up, the reference to the session is lost
-
-## Examples
-
-- [Sample Server with Cookie Authentication](./examples/cookies/main.go)
 
 ## Roadmap
 
