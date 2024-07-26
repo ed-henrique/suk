@@ -18,7 +18,11 @@ import (
 const (
 	// maxCookieSize is used for reference, as stipulated by RFC 2109, RFC 2965
 	// and RFC 6265.
-	maxCookieSize = 4096
+	_maxCookieSize = 4096
+
+	// defaultKeyLength gives an entropy of 192 for each key, which should be fine
+	// for most applications.
+	defaultKeyLength = 32
 )
 
 var (
@@ -180,6 +184,7 @@ type SessionStorage struct {
 	storage storage
 }
 
+// NewSessionStorage creates a new session storage.
 func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
 	var c config
 	errs := make([]error, 0, len(opts))
@@ -195,14 +200,14 @@ func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
 
 	ss := SessionStorage{config: c}
 
-	var keyLength uint64 = maxCookieSize
+	var keyLength uint64 = defaultKeyLength
 	if c.customKeyLength != nil {
 		keyLength = *c.customKeyLength
 	}
 
 	var durationToExpire time.Duration
-	if c.customTokenDuration != nil {
-		durationToExpire = *c.customTokenDuration
+	if c.customKeyDuration != nil {
+		durationToExpire = *c.customKeyDuration
 	} else {
 		durationToExpire = defaultDurationToExpire
 	}
@@ -217,12 +222,7 @@ func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
 	sm := syncMap{new(sync.Map), keyLength, durationToExpire}
 	ss.storage = &sm
 
-	var autoClearExpiredKeys bool
-	if c.autoExpiredClear != nil {
-		autoClearExpiredKeys = *c.autoExpiredClear
-	}
-
-	if autoClearExpiredKeys {
+	if c.autoExpiredClear {
 		ticker := time.NewTicker(durationToExpire)
 
 		go func() {
@@ -238,18 +238,25 @@ func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
 	return &ss, nil
 }
 
+// Set assigns the session and returns a key for it.
 func (ss *SessionStorage) Set(session any) (string, error) {
 	return ss.storage.set(session)
 }
 
+// Get retrieves the session and generates a new key for it.
 func (ss *SessionStorage) Get(key string) (any, string, error) {
 	return ss.storage.get(key)
 }
 
+// Remove deletes the specified key and its associated value.
 func (ss *SessionStorage) Remove(key string) error {
 	return ss.storage.remove(key)
 }
 
+// ClearExpired removes all expired keys. For Redis, this function is a no-op
+// as Redis handles expiration automatically. To enable similar behavior for
+// the default syncMap, start the SessionStorage with the
+// WithAutoClearExpiredKeys option.
 func (ss *SessionStorage) ClearExpired() error {
 	return ss.storage.clearExpired()
 }
