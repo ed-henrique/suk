@@ -3,6 +3,7 @@ package suk
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -11,13 +12,17 @@ var (
 	ErrNilRedisClient        = errors.New("The given Redis client is nil.")
 	ErrRedisClientAlreadySet = errors.New("A Redis client was already registered for this session storage.")
 
-	ErrCustomKeyLengthAlreadySet = errors.New("A custom key length was already registered for this session storage.")
+	ErrCustomKeyLengthAlreadySet     = errors.New("A custom key length was already registered for this session storage.")
+	ErrCustomTokenDurationAlreadySet = errors.New("A custom token duration was already registered for this session storage.")
+	ErrAutoExpiredClearAlreadySet    = errors.New("Auto clear for expired keys was already set for this session storage.")
 )
 
 type config struct {
-	customKeyLength *uint64
-	redisCtx        context.Context
-	redisClient     *redis.Client
+	autoExpiredClear    *bool
+	customKeyLength     *uint64
+	customTokenDuration *time.Duration
+	redisCtx            context.Context
+	redisClient         *redis.Client
 }
 
 type Option interface {
@@ -61,6 +66,31 @@ func WithCustomKeyLength(keyLength uint64) Option {
 		}
 
 		c.customKeyLength = &keyLength
+		return nil
+	})
+}
+
+// WithTokenDuration sets a custom key length for generated keys.
+func WithTokenDuration(duration time.Duration) Option {
+	return option(func(c *config) error {
+		if c.customTokenDuration != nil {
+			return ErrCustomTokenDurationAlreadySet
+		}
+
+		c.customTokenDuration = &duration
+		return nil
+	})
+}
+
+// WithTokenDuration sets a custom key length for generated keys.
+func WithAutoExpiredClear() Option {
+	return option(func(c *config) error {
+		if c.autoExpiredClear != nil {
+			return ErrCustomTokenDurationAlreadySet
+		}
+
+		trueValue := true
+		c.autoExpiredClear = &trueValue
 		return nil
 	})
 }

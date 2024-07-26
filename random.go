@@ -9,7 +9,7 @@ import (
 
 const (
 	// stringBuffer contains all characters used to randomly generate keys.
-	stringBuffer = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+	stringBuffer = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 )
 
 // Code taken from https://gist.github.com/dopey/c69559607800d2f2f90b1b1ed4e550fb
