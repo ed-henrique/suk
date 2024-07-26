@@ -23,7 +23,7 @@ func TestRandomID(t *testing.T) {
 
 		ids := make([]string, 0, concurrentStrings)
 		idChannel := make(chan string)
-	
+
 		for range concurrentStrings {
 			go func() {
 				id, err := randomID(idLen)
@@ -31,7 +31,7 @@ func TestRandomID(t *testing.T) {
 					t.Error(err)
 				}
 
-				idChannel<-id
+				idChannel <- id
 			}()
 		}
 
@@ -50,7 +50,7 @@ func TestRandomID(t *testing.T) {
 
 		ids := make([]string, 0, concurrentStrings)
 		idChannel := make(chan string)
-	
+
 		for range concurrentStrings {
 			go func() {
 				id, err := randomID(idLen)
@@ -58,7 +58,7 @@ func TestRandomID(t *testing.T) {
 					t.Error(err)
 				}
 
-				idChannel<-id
+				idChannel <- id
 			}()
 		}
 
@@ -77,7 +77,7 @@ func TestRandomID(t *testing.T) {
 
 		ids := make([]string, 0, concurrentStrings)
 		idChannel := make(chan string)
-	
+
 		for range concurrentStrings {
 			go func() {
 				id, err := randomID(idLen)
@@ -85,7 +85,7 @@ func TestRandomID(t *testing.T) {
 					t.Error(err)
 				}
 
-				idChannel<-id
+				idChannel <- id
 			}()
 		}
 
