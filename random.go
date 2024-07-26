@@ -9,26 +9,29 @@ import (
 
 const (
 	// stringBuffer contains all characters used to randomly generate keys.
-	stringBuffer = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+	stringBuffer = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_"
 )
 
-// Code taken from https://gist.github.com/dopey/c69559607800d2f2f90b1b1ed4e550fb
+// Most of this code was taken from
+// https://gist.github.com/dopey/c69559607800d2f2f90b1b1ed4e550fb
 func init() {
 	assertAvailablePRNG()
 }
 
+// assertAvailablePRNG asserts that there is an available pseudorandom number
+// generator, which is used to create random IDs via randomID.
 func assertAvailablePRNG() {
-	// Assert that a cryptographically secure PRNG is available.
-	// Panic otherwise.
 	buf := make([]byte, 1)
 
 	_, err := io.ReadFull(rand.Reader, buf)
 	if err != nil {
-		panic(fmt.Sprintf("crypto/rand is unavailable: Read() failed with %#v", err))
+		panic(
+			fmt.Sprintf("crypto/rand is unavailable: Read() failed with %#v", err),
+		)
 	}
 }
 
-// GenerateRandomString returns a securely generated random string.
+// randomID returns a securely generated random string.
 // It will return an error if the system's secure random
 // number generator fails to function correctly, in which
 // case the caller should not continue.

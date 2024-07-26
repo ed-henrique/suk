@@ -9,20 +9,24 @@ import (
 )
 
 var (
+	// Redis Option Errors
+
 	ErrNilRedisClient        = errors.New("The given Redis client is nil.")
 	ErrRedisClientAlreadySet = errors.New("A Redis client was already registered for this session storage.")
 
-	ErrCustomKeyLengthAlreadySet     = errors.New("A custom key length was already registered for this session storage.")
-	ErrCustomTokenDurationAlreadySet = errors.New("A custom token duration was already registered for this session storage.")
-	ErrAutoExpiredClearAlreadySet    = errors.New("Auto clear for expired keys was already set for this session storage.")
+	// Option Already Set Errors
+
+	ErrCustomKeyLengthAlreadySet   = errors.New("A custom key length was already registered for this session storage.")
+	ErrCustomKeyDurationAlreadySet = errors.New("A custom key duration was already registered for this session storage.")
+	ErrAutoExpiredClearAlreadySet  = errors.New("Auto clear for expired keys was already set for this session storage.")
 )
 
 type config struct {
-	autoExpiredClear    *bool
-	customKeyLength     *uint64
-	customTokenDuration *time.Duration
-	redisCtx            context.Context
-	redisClient         *redis.Client
+	autoExpiredClear  bool
+	customKeyLength   *uint64
+	customKeyDuration *time.Duration
+	redisCtx          context.Context
+	redisClient       *redis.Client
 }
 
 type Option interface {
@@ -36,7 +40,8 @@ func (o option) apply(c *config) error {
 }
 
 // WithRedis uses the given Redis client to store the sessions, instead of using
-// an in-memory storage.
+// an in-memory storage. It also may receive a custom context to work on, but by
+// default it uses context.Background().
 func WithRedis(client *redis.Client, ctx context.Context) Option {
 	return option(func(c *config) error {
 		if c.redisClient != nil || c.redisCtx != nil {
@@ -58,7 +63,9 @@ func WithRedis(client *redis.Client, ctx context.Context) Option {
 	})
 }
 
-// WithCustomKeyLength sets a custom key length for generated keys.
+// WithCustomKeyLength sets a custom key length for generated keys. The default
+// is 32, which gives an entropy of 192 for each key, which should be fine for
+// most applications.
 func WithCustomKeyLength(keyLength uint64) Option {
 	return option(func(c *config) error {
 		if c.customKeyLength != nil {
@@ -70,27 +77,26 @@ func WithCustomKeyLength(keyLength uint64) Option {
 	})
 }
 
-// WithTokenDuration sets a custom key length for generated keys.
-func WithTokenDuration(duration time.Duration) Option {
+// WithKeyDuration sets a custom duration for generated keys. The default is
+// 10 minutes.
+func WithKeyDuration(duration time.Duration) Option {
 	return option(func(c *config) error {
-		if c.customTokenDuration != nil {
-			return ErrCustomTokenDurationAlreadySet
+		if c.customKeyDuration != nil {
+			return ErrCustomKeyDurationAlreadySet
 		}
 
-		c.customTokenDuration = &duration
+		c.customKeyDuration = &duration
 		return nil
 	})
 }
 
-// WithTokenDuration sets a custom key length for generated keys.
-func WithAutoExpiredClear() Option {
+// WithAutoClearExpiredKeys automatically clears expired keys at intervals
+// based on the set key expiration time. By default, the clearing process occurs
+// every 10 minutes, but this can be adjusted by setting a different key
+// expiration time using WithTokenDuration.
+func WithAutoClearExpiredKeys() Option {
 	return option(func(c *config) error {
-		if c.autoExpiredClear != nil {
-			return ErrCustomTokenDurationAlreadySet
-		}
-
-		trueValue := true
-		c.autoExpiredClear = &trueValue
+		c.autoExpiredClear = true
 		return nil
 	})
 }
