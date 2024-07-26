@@ -9,10 +9,18 @@ import (
 )
 
 var (
-	// Redis Option Errors
+	// WithRedis Errors
 
 	ErrNilRedisClient        = errors.New("The given Redis client is nil.")
 	ErrRedisClientAlreadySet = errors.New("A Redis client was already registered for this session storage.")
+
+	// WithKeyLength Errors
+
+	ErrZeroKeyLength = errors.New("The given key length must be at least 1.")
+
+	// WithKeyDuration Errors
+
+	ErrNonPositiveKeyDuration = errors.New("The given key duration must be positive.")
 
 	// Option Already Set Errors
 
@@ -63,13 +71,20 @@ func WithRedis(client *redis.Client, ctx context.Context) Option {
 	})
 }
 
-// WithCustomKeyLength sets a custom key length for generated keys. The default
+// WithKeyLength sets a custom key length for generated keys. The default
 // is 32, which gives an entropy of 192 for each key, which should be fine for
 // most applications.
-func WithCustomKeyLength(keyLength uint64) Option {
+//
+// Be aware that low length keys are susceptible to guessing, as the entropy
+// level goes down. To calculate entropy, do keyLength * log2(65).
+func WithKeyLength(keyLength uint64) Option {
 	return option(func(c *config) error {
 		if c.customKeyLength != nil {
 			return ErrCustomKeyLengthAlreadySet
+		}
+
+		if keyLength == 0 {
+			return ErrZeroKeyLength
 		}
 
 		c.customKeyLength = &keyLength
@@ -83,6 +98,10 @@ func WithKeyDuration(duration time.Duration) Option {
 	return option(func(c *config) error {
 		if c.customKeyDuration != nil {
 			return ErrCustomKeyDurationAlreadySet
+		}
+
+		if duration <= 0 {
+			return ErrNonPositiveKeyDuration
 		}
 
 		c.customKeyDuration = &duration

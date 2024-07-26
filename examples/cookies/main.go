@@ -105,9 +105,9 @@ func (s *server) removeCookie(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// We are using the default syncMap
 	ss, err := suk.NewSessionStorage(
-		suk.WithCustomKeyLength(10),
-		suk.WithTokenDuration(5*time.Minute),
-		suk.WithAutoExpiredClear(),
+		suk.WithKeyLength(10),
+		suk.WithKeyDuration(5*time.Minute),
+		suk.WithAutoClearExpiredKeys(),
 	)
 	if err != nil {
 		panic(err)
