@@ -60,6 +60,10 @@ func main() {
 
 - [Sample Server with Cookie Authentication](./examples/cookies/main.go)
 
+### Documentation
+
+Please refer to [this](https://pkg.go.dev/github.com/ed-henrique/suk).
+
 ## Decisions
 
 - Multiple cookies can connect to a single session, but they are not aware of
