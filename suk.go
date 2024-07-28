@@ -182,10 +182,14 @@ func (r *redisDB) clearExpired() error {
 type SessionStorage struct {
 	config  config
 	storage storage
+
+	// stopChannel is only used when WithAutoClearExpiredKeys is set, to finish
+	// the underlying go routine that keeps ticking the autoclear.
+	stopChannel chan struct{}
 }
 
-// NewSessionStorage creates a new session storage.
-func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
+// New creates a new session storage.
+func New(opts ...Option) (*SessionStorage, error) {
 	var c config
 	errs := make([]error, 0, len(opts))
 	for _, opt := range opts {
@@ -222,12 +226,17 @@ func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
 	sm := syncMap{new(sync.Map), keyLength, durationToExpire}
 	ss.storage = &sm
 
-	if c.autoExpiredClear {
-		ticker := time.NewTicker(durationToExpire)
+	if c.autoClearExpiredKeys {
+		ss.stopChannel = make(chan struct{})
 
 		go func() {
+			ticker := time.NewTicker(durationToExpire)
+			defer ticker.Stop()
+
 			for {
 				select {
+				case <-ss.stopChannel:
+					return
 				case <-ticker.C:
 					ss.ClearExpired()
 				}
@@ -236,6 +245,15 @@ func NewSessionStorage(opts ...Option) (*SessionStorage, error) {
 	}
 
 	return &ss, nil
+}
+
+// Destroy cleans up and removes a session storage.
+func Destroy(ss *SessionStorage) {
+	if ss.config.autoClearExpiredKeys {
+		close(ss.stopChannel)
+	}
+
+	ss = nil
 }
 
 // Set assigns the session and returns a key for it.

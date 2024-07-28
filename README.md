@@ -43,7 +43,11 @@ import (
 func main() {
     resource := "important stuff here!"
 
-    ss, _ := suk.NewSessionStorage(suk.WithAutoClearExpiredKeys())
+    // Creates new session storage
+    ss, _ := suk.New(suk.WithAutoClearExpiredKeys())
+
+    // Removes session storage
+    defer suk.Destroy(ss)
 
     // Sets resource to a randomly generated key
     key, _ := ss.Set(resource)

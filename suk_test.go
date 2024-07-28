@@ -7,7 +7,7 @@ import (
 
 func TestSyncMapStorage(t *testing.T) {
 	t.Run("Sync map storage setting 1 key", func(t *testing.T) {
-		ss, _ := NewSessionStorage()
+		ss, _ := New()
 		got, _ := ss.Set(10)
 
 		if got == "" {
@@ -16,7 +16,7 @@ func TestSyncMapStorage(t *testing.T) {
 	})
 
 	t.Run("Sync map storage setting 5 keys", func(t *testing.T) {
-		ss, _ := NewSessionStorage()
+		ss, _ := New()
 
 		for i := range 5 {
 			ss.Set(i)
@@ -36,7 +36,7 @@ func TestSyncMapStorage(t *testing.T) {
 	})
 
 	t.Run("Sync map storage setting and getting 1 key", func(t *testing.T) {
-		ss, _ := NewSessionStorage()
+		ss, _ := New()
 		gotSet, _ := ss.Set(10)
 
 		if gotSet == "" {
@@ -67,7 +67,7 @@ func TestSyncMapStorage(t *testing.T) {
 	})
 
 	t.Run("Sync map storage with 10 concurrent sets", func(t *testing.T) {
-		ss, _ := NewSessionStorage()
+		ss, _ := New()
 
 		wg := new(sync.WaitGroup)
 
@@ -95,7 +95,7 @@ func TestSyncMapStorage(t *testing.T) {
 	})
 
 	t.Run("Sync map storage with 1.000 concurrent sets", func(t *testing.T) {
-		ss, _ := NewSessionStorage()
+		ss, _ := New()
 
 		wg := new(sync.WaitGroup)
 

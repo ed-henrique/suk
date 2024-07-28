@@ -26,11 +26,11 @@ var (
 
 	ErrCustomKeyLengthAlreadySet   = errors.New("A custom key length was already registered for this session storage.")
 	ErrCustomKeyDurationAlreadySet = errors.New("A custom key duration was already registered for this session storage.")
-	ErrAutoExpiredClearAlreadySet  = errors.New("Auto clear for expired keys was already set for this session storage.")
+	ErrAutoClearExpiredKeysAlreadySet  = errors.New("Auto clear for expired keys was already set for this session storage.")
 )
 
 type config struct {
-	autoExpiredClear  bool
+	autoClearExpiredKeys  bool
 	customKeyLength   *uint64
 	customKeyDuration *time.Duration
 	redisCtx          context.Context
@@ -115,7 +115,7 @@ func WithKeyDuration(duration time.Duration) Option {
 // expiration time using WithTokenDuration.
 func WithAutoClearExpiredKeys() Option {
 	return option(func(c *config) error {
-		c.autoExpiredClear = true
+		c.autoClearExpiredKeys = true
 		return nil
 	})
 }
