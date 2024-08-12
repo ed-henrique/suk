@@ -50,6 +50,7 @@ type syncMap struct {
 
 	keyLength        uint64
 	durationToExpire time.Duration
+	rkg              func(uint64) (string, error)
 }
 
 func (s *syncMap) set(session any) (string, error) {
@@ -57,7 +58,7 @@ func (s *syncMap) set(session any) (string, error) {
 		return "", ErrNilSession
 	}
 
-	id, err := randomID(s.keyLength)
+	id, err := s.rkg(s.keyLength)
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +70,7 @@ func (s *syncMap) set(session any) (string, error) {
 			break
 		}
 
-		id, err = randomID(s.keyLength)
+		id, err = s.rkg(s.keyLength)
 		if err != nil {
 			return "", err
 		}
@@ -121,6 +122,7 @@ type redisDB struct {
 	ctx              context.Context
 	keyLength        uint64
 	durationToExpire time.Duration
+	rkg              func(uint64) (string, error)
 }
 
 func (r *redisDB) set(session any) (string, error) {
@@ -128,7 +130,7 @@ func (r *redisDB) set(session any) (string, error) {
 		return "", ErrNilSession
 	}
 
-	id, err := randomID(r.keyLength)
+	id, err := r.rkg(r.keyLength)
 	if err != nil {
 		return "", err
 	}
@@ -141,7 +143,7 @@ func (r *redisDB) set(session any) (string, error) {
 			return "", err
 		}
 
-		id, err = randomID(r.keyLength)
+		id, err = r.rkg(r.keyLength)
 		if err != nil {
 			return "", err
 		}
@@ -182,7 +184,7 @@ func (r *redisDB) clearExpired() error {
 type SessionStorage struct {
 	config  config
 	storage storage
-	mu *sync.Mutex
+	mu      *sync.Mutex
 
 	// stopChannel is only used when WithAutoClearExpiredKeys is set, to finish
 	// the underlying go routine that keeps ticking the autoclear.
@@ -217,14 +219,21 @@ func New(opts ...Option) (*SessionStorage, error) {
 		durationToExpire = defaultDurationToExpire
 	}
 
+	var rkg func(uint64) (string, error)
+	if c.customRandomKeyGenerator != nil {
+		rkg = c.customRandomKeyGenerator
+	} else {
+		rkg = defaultRandomKeyGenerator
+	}
+
 	if c.redisClient != nil {
-		cd := redisDB{new(redis.Client), c.redisCtx, keyLength, durationToExpire}
+		cd := redisDB{new(redis.Client), c.redisCtx, keyLength, durationToExpire, rkg}
 		ss.storage = &cd
 
 		return &ss, nil
 	}
 
-	sm := syncMap{new(sync.Map), keyLength, durationToExpire}
+	sm := syncMap{new(sync.Map), keyLength, durationToExpire, rkg}
 	ss.storage = &sm
 
 	if c.autoClearExpiredKeys {
@@ -304,6 +313,6 @@ func (ss *SessionStorage) ClearExpired() error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }

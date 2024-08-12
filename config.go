@@ -22,19 +22,24 @@ var (
 
 	ErrNonPositiveKeyDuration = errors.New("The given key duration must be positive.")
 
+	// WithCustomRandomKeyGenerator Errors
+
+	ErrNilRandomKeyGenerator = errors.New("The given random key generator function is nil.")
+
 	// Option Already Set Errors
 
-	ErrCustomKeyLengthAlreadySet   = errors.New("A custom key length was already registered for this session storage.")
-	ErrCustomKeyDurationAlreadySet = errors.New("A custom key duration was already registered for this session storage.")
-	ErrAutoClearExpiredKeysAlreadySet  = errors.New("Auto clear for expired keys was already set for this session storage.")
+	ErrCustomKeyLengthAlreadySet      = errors.New("A custom key length was already registered for this session storage.")
+	ErrCustomKeyDurationAlreadySet    = errors.New("A custom key duration was already registered for this session storage.")
+	ErrAutoClearExpiredKeysAlreadySet = errors.New("Auto clear for expired keys was already set for this session storage.")
 )
 
 type config struct {
-	autoClearExpiredKeys  bool
-	customKeyLength   *uint64
-	customKeyDuration *time.Duration
-	redisCtx          context.Context
-	redisClient       *redis.Client
+	autoClearExpiredKeys     bool
+	customKeyLength          *uint64
+	customKeyDuration        *time.Duration
+	customRandomKeyGenerator func(uint64) (string, error)
+	redisCtx                 context.Context
+	redisClient              *redis.Client
 }
 
 type Option interface {
@@ -116,6 +121,18 @@ func WithKeyDuration(duration time.Duration) Option {
 func WithAutoClearExpiredKeys() Option {
 	return option(func(c *config) error {
 		c.autoClearExpiredKeys = true
+		return nil
+	})
+}
+
+// WithCustomRandomKeyGenerator sets a custom function to generate the keys.
+func WithCustomRandomKeyGenerator(rkg func (uint64) (string, error)) Option {
+	return option(func(c *config) error {
+		if rkg == nil {
+			return ErrNonPositiveKeyDuration
+		}
+
+		c.customRandomKeyGenerator = rkg
 		return nil
 	})
 }
