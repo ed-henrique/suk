@@ -182,6 +182,7 @@ func (r *redisDB) clearExpired() error {
 type SessionStorage struct {
 	config  config
 	storage storage
+	mu *sync.Mutex
 
 	// stopChannel is only used when WithAutoClearExpiredKeys is set, to finish
 	// the underlying go routine that keeps ticking the autoclear.
@@ -202,7 +203,7 @@ func New(opts ...Option) (*SessionStorage, error) {
 		return nil, errors.Join(errs...)
 	}
 
-	ss := SessionStorage{config: c}
+	ss := SessionStorage{config: c, mu: &sync.Mutex{}}
 
 	var keyLength uint64 = defaultKeyLength
 	if c.customKeyLength != nil {
@@ -258,17 +259,38 @@ func Destroy(ss *SessionStorage) {
 
 // Set assigns the session and returns a key for it.
 func (ss *SessionStorage) Set(session any) (string, error) {
-	return ss.storage.set(session)
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	key, err := ss.storage.set(session)
+	if err != nil {
+		return "", err
+	}
+
+	return key, nil
 }
 
 // Get retrieves the session and generates a new key for it.
 func (ss *SessionStorage) Get(key string) (any, string, error) {
-	return ss.storage.get(key)
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	session, newKey, err := ss.storage.get(key)
+	if err != nil {
+		return struct{}{}, "", err
+	}
+
+	return session, newKey, nil
 }
 
 // Remove deletes the specified key and its associated value.
 func (ss *SessionStorage) Remove(key string) error {
-	return ss.storage.remove(key)
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	err := ss.storage.remove(key)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ClearExpired removes all expired keys. For Redis, this function is a no-op
@@ -276,5 +298,12 @@ func (ss *SessionStorage) Remove(key string) error {
 // the default syncMap, start the SessionStorage with the
 // WithAutoClearExpiredKeys option.
 func (ss *SessionStorage) ClearExpired() error {
-	return ss.storage.clearExpired()
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	err := ss.storage.clearExpired()
+	if err != nil {
+		return err
+	}
+	
+	return nil
 }
