@@ -77,7 +77,5 @@ each other
 ## Roadmap
 
 - [ ] Extensive testing
-- [ ] Make implementation concurrent-safe (Currently, it is insanely difficult
-to get a collision using the default 32 key length, but it is possible, so I'm
-working to get around this chance)
+- [x] Make implementation concurrent-safe
 - [ ] Use better algorithm for random and strong keys (refer to [this](https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go))
