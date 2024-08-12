@@ -31,11 +31,10 @@ func assertAvailablePRNG() {
 	}
 }
 
-// randomID returns a securely generated random string.
-// It will return an error if the system's secure random
-// number generator fails to function correctly, in which
-// case the caller should not continue.
-func randomID(n uint64) (string, error) {
+// defaultRandomKeyGenerator returns a securely generated random string. It will
+// return an error if the system's secure random number generator fails to
+// function correctly, in which case the caller should not continue.
+func defaultRandomKeyGenerator(n uint64) (string, error) {
 	ret := make([]byte, n)
 
 	var i uint64
